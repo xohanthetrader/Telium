@@ -59,10 +59,15 @@ def get_action():
 				move = action[1]	
 			else:
 				move = int(input("What module do you want to move to: "))
-		if move in possible_moves:
-			valid_action = True
-			last_module = module
-			module = move
+			if move in possible_moves:
+				valid_action = True
+				last_module = module
+				module = move
+		if action[0] == "SCANNER":
+			if action[1] == "LOCK":
+				print(action[2])
+				lock(action[2])
+		
 				
 		else:
 			print("The module must be connected to the current module")
@@ -77,10 +82,19 @@ def sanitize(input):
 	inputs = input.split()
 	if "M" in inputs[0].upper():
 		inputs[0] = "MOVE"	
-	try:
-		inputs[1] = int(inputs[1])
-	except:
-		inputs.append(0)
+		try:
+			inputs[1] = int(inputs[1])
+		except:
+			inputs.append(0)
+	elif "L" in inputs[0].upper():
+		try:
+			mod = int(inputs[1])
+		except:
+			mod = 0
+		inputs = ["SCANNER","LOCK",mod]
+	else:
+		inputs[0] = "0"
+	
 	return inputs
 
 
@@ -116,6 +130,37 @@ def check_mod(currmod):
 		what = "vent shaft"
 	if what != "":
 		print(f"There is a {what} in here")
+
+def check_vent_shafts():
+	global num_modules, module, vent_shafts, fuel
+	if module in vent_shafts:
+		print("There is a bank of fuel cells here")
+		print("You load one into your flamethrower")
+		fuel_gained = random.randint(2,5) * 10
+		print(f"You had {fuel} but now have {fuel+fuel_gained}")
+		fuel += fuel_gained
+		print("The doors suddenly lock shut")
+		print("What is happening to the station")
+		print("Our only escape it to go into the ventillation shaft")
+		print("We go though to an unkown module")
+		last_module = module
+		while module in vent_shafts:
+			module = random.randint(1,num_modules)
+		load_module()
+
+def lock(new_lock):
+	global num_modules, power, locked
+	if new_lock == 0:
+		new_lock = int(input("What moudule do you wish to lock"))
+	if new_lock < 0 and new_lock > num_modules:
+		print("Invalid Lock Failed")
+	elif new_lock == queen:
+		print("operation failed")
+	else:
+		locked = new_lock
+		print(f"{locked} has been succefully locked")
+		power_used = 25 + 5 * random.randint(0,5)
+		power -= power_used
 	
 #Main
 
@@ -134,6 +179,7 @@ print("Worker aliens are located in modules:",workers)
 
 while alive and not won:
 	load_module()
+	check_vent_shafts()
 	check_power()
 	if (not won) and alive:
 		output_moves()
