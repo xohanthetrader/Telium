@@ -67,8 +67,8 @@ def get_action():
 			if action[1] == "LOCK":
 				print(action[2])
 				lock(action[2])
-		
-				
+			elif action[1] == "":
+				lock(action[2])
 		else:
 			print("The module must be connected to the current module")
 	power -= 1
@@ -92,6 +92,8 @@ def sanitize(input):
 		except:
 			mod = 0
 		inputs = ["SCANNER","LOCK",mod]
+	elif "S" in inputs[0].upper():
+		inputs = ["SCANNER","",0]
 	else:
 		inputs[0] = "0"
 	
@@ -132,7 +134,7 @@ def check_mod(currmod):
 		print(f"There is a {what} in here")
 
 def check_vent_shafts():
-	global num_modules, module, vent_shafts, fuel
+	global num_modules, module, vent_shafts, fuel, last_module
 	if module in vent_shafts:
 		print("There is a bank of fuel cells here")
 		print("You load one into your flamethrower")
@@ -161,7 +163,47 @@ def lock(new_lock):
 		print(f"{locked} has been succefully locked")
 		power_used = 25 + 5 * random.randint(0,5)
 		power -= power_used
-	
+
+def move_queen():
+	global num_modules, module, last_module, locked, queen, won, vent_shafts
+	if module == queen:
+		print("There it is the queen alien is in this module ... ")
+		moves_to_make = random.randint(1,3)
+		can_move_to_last_module = False
+		while moves_to_make > 0:
+			escapes = get_modules_from(queen)
+			if module in escapes:
+				escapes.remove(module)
+			if last_module in escapes and can_move_to_last_module == False:
+				escapes.remove(last_module)
+			if locked in escapes:
+				escapes.remove(locked)
+			if len(escapes) == 0:
+				won = True
+				moves_to_make = 0
+				print("...and the door is locked. Its trapped")
+			else:
+				if moves_to_make == 1:
+					print(".. and has escaped")
+				queen = random.choice(escapes)
+				moves_to_make -= 1
+				can_move_to_last_module = True
+				while queen in vent_shafts:
+					if moves_to_make > 1:
+						print("... has escaped")
+					print("WE can hear scuttling in the vents")
+					valid_move = False
+					while not valid_move:
+						valid_move = True
+						queen = random.randint(1,num_modules)
+						if queen in vent_shafts:
+							valid_move = False
+					moves_to_make = 0
+		
+def check_fuel():
+	global fuel
+	print(f"You have {fuel}fuel")
+					
 #Main
 
 print("Do you wish to see a map? y/[n]")
@@ -178,8 +220,10 @@ print("Information panels are located in modules:",info_panels)
 print("Worker aliens are located in modules:",workers)
 
 while alive and not won:
+	check_fuel()
 	load_module()
 	check_vent_shafts()
+	move_queen()
 	check_power()
 	if (not won) and alive:
 		output_moves()
